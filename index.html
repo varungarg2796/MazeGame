@@ -4,11 +4,32 @@
     <meta charset="utf-8" />
     <title>Page Title</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.14.2/matter.min.js"></script>
+    <style>
+        .hidden{
+            display: none!important;
+        }
+        h1{
+            color: white;
+            font-size: 36px;
+        }
+        .winner{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            z-index: 2;
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
 </head>
-<body>
+<body style="margin: 0;">
+    
+    <div class="winner hidden">
+        <h1> YOU WIN!! </h1>
+        <br>
+        <button onclick="initialize()">Play again?</button>
+    </div>
     <script src="script.js"></script>
-    <br>
-    <H2> THE (am)MAZE GAME</H2>
-    <H5>WASD to control</H5>
 </body>
 </html>

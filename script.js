@@ -1,10 +1,12 @@
 const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
 
-const width = 700;
-const height = 700;
-const cells = 10;
 
-const unitLength = height / cells;
+const cellsHorizontal = 10;
+const cellsVertical = 10;
+const width = window.innerWidth;
+const height = window.innerHeight;
+const unitLengthX = width / cellsHorizontal;
+const unitLengthY = height / cellsVertical;
 const engine = Engine.create();
 engine.world.gravity.y = 0;
 const { world } = engine;
@@ -12,7 +14,7 @@ const render = Render.create({
     element: document.body,
     engine: engine,
     options: {
-        wireframes: true, //for colours (false)
+        wireframes: false , //for colours (false)
         width,
         height
     }
@@ -36,7 +38,7 @@ const shuffle = (arr) => {
     return arr;
 }
 
-// Walls
+// Generating Walls
 const walls = [
     Bodies.rectangle(width/2 , 0, width, 2, { isStatic : true}),
     Bodies.rectangle(width/2 , height , width, 2, { isStatic : true}),
@@ -46,22 +48,23 @@ const walls = [
 World.add(world, walls);
 
 // Generating grid
-const grid = Array(cells) // increase 3 for increasing columns
+const grid = Array(cellsVertical) // increase 3 for increasing columns
     .fill(null)
-    .map( ()=> Array(cells).fill(false)); // increase 3 for increasing rows
+    .map( ()=> Array(cellsHorizontal).fill(false)); // increase 3 for increasing rows
 
-const verticals = Array(cells)
+const verticals = Array(cellsVertical)
     .fill(null)
-    .map( () => Array(cells - 1).fill(false));
+    .map( () => Array(cellsHorizontal - 1).fill(false));
 
-const horizontals = Array(cells - 1)
+const horizontals = Array(cellsVertical - 1)
     .fill(null)
-    .map( () => Array(cells).fill(false));
+    .map( () => Array(cellsHorizontal).fill(false));
 
 
-const startRow = Math.floor(Math.random() * cells);
-const startColumn = Math.floor(Math.random() * cells);
+const startRow = Math.floor(Math.random() * cellsVertical);
+const startColumn = Math.floor(Math.random() * cellsHorizontal);
 
+// Logic for building a legal maze
 const stepThroughCell = (row, column) => {
 
     // IF I have visited the cell at [row, column] , then return
@@ -90,7 +93,7 @@ const stepThroughCell = (row, column) => {
         const [nextRow, nextColumn, direction] = neighbor //array destructuring
         
         // See if that neighbor is out of bounds
-        if (nextRow < 0 || nextRow >=cells || nextColumn < 0 || nextColumn >= cells){
+        if (nextRow < 0 || nextRow >=cellsVertical || nextColumn < 0 || nextColumn >= cellsHorizontal){
             continue;
         }
         // See If we have visited the neighbor, continue to the next neighbor
@@ -125,13 +128,16 @@ horizontals.forEach((row, rowIndex) => {
         }
 
         const wall = Bodies.rectangle(
-            columnIndex * unitLength + unitLength / 2,
-            rowIndex * unitLength + unitLength,
-            unitLength,
+            columnIndex * unitLengthX+ unitLengthX / 2,
+            rowIndex * unitLengthY + unitLengthY,
+            unitLengthX,
             2, 
             {
                 label: 'wall',
-                isStatic:true
+                isStatic:true,
+                render: {
+                    fillStyle: 'red'
+                }
             }
         );
         World.add( world, wall);
@@ -145,13 +151,16 @@ verticals.forEach((row, rowIndex) => {
         }
 
         const wall = Bodies.rectangle(
-            columnIndex * unitLength + unitLength,
-            rowIndex * unitLength + unitLength / 2,
+            columnIndex * unitLengthX + unitLengthX,
+            rowIndex * unitLengthY + unitLengthY / 2,
             2,
-            unitLength, 
+            unitLengthY, 
             {
                 label: 'wall',
-                isStatic:true
+                isStatic:true,
+                render: {
+                    fillStyle: 'red'
+                }
             }
         );
         World.add( world, wall);
@@ -161,13 +170,16 @@ verticals.forEach((row, rowIndex) => {
 // Adding the goal 
 
 const goal = Bodies.rectangle(
-    width - unitLength / 2,
-    height - unitLength / 2,
-    unitLength * .6,
-    unitLength * .6, 
+    width - unitLengthX / 2,
+    height - unitLengthY / 2,
+    unitLengthX * .6,
+    unitLengthY * .6, 
     {
         label: 'goal',
-        isStatic:true
+        isStatic:true,
+        render: {
+            fillStyle: 'green'
+        }
     }
 )
 World.add ( world, goal);
@@ -175,16 +187,20 @@ World.add ( world, goal);
 
 // Drawing the ball 
 
+const ballRadius = Math.min(unitLengthX, unitLengthY) / 4 ;
 const ball = Bodies.circle(
-    unitLength / 2,
-    unitLength / 2,
-    unitLength / 4,
+    unitLengthX / 2,
+    unitLengthY / 2,
+    ballRadius,
     {
         label: 'ball'
     }
 )
 World.add ( world, ball);
 
+const initialize = ()=>{
+    window.location.reload();
+}
 
 document.addEventListener('keydown', event => {
     const { x, y } = ball.velocity;
@@ -207,6 +223,7 @@ Events.on(engine, 'collisionStart', event => {
     event.pairs.forEach(collision => {
         const label = ['ball', 'goal'];
         if(label.includes(collision.bodyA.label) && label.includes(collision.bodyB.label)){
+            document.querySelector('.winner').classList.remove('hidden');
             world.gravity.y = 1;
             world.bodies.forEach( body => {
                 if(body.label === 'wall'){
@@ -216,7 +233,3 @@ Events.on(engine, 'collisionStart', event => {
         }
     })
 })
-// console.log(grid);
-// console.log({verticals});
-// console.log({horizontals});
-// console.log(startRow, startColumn);
